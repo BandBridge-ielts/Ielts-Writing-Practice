@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Writing Practice Master</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #c70000;
+            --primary-hover: #9e0000;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --accent-green: #22c55e;
+            --accent-yellow: #eab308;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo span {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #334155;
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        select, input, textarea {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Workspace Grid */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            padding: 1rem;
+            flex: 1;
+            height: calc(100vh - 70px);
+        }
+
+        .panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 0.75rem 1rem;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-body {
+            padding: 1rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            background: none;
+            color: var(--text-muted);
+            padding: 0.75rem 1rem;
+            border-radius: 0;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: var(--text-main);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Editor */
+        #essay-input {
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1rem;
+            line-height: 1.6;
+            outline: none;
+        }
+
+        /* Progress Bar */
+        .progress-bar-bg {
+            background-color: var(--bg-dark);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .progress-bar-fill {
+            background-color: var(--accent-yellow);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        .progress-bar-fill.complete {
+            background-color: var(--accent-green);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .metric-card {
+            background-color: var(--bg-dark);
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* History List */
+        .history-item {
+            background-color: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Responsive Layout */
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo"><span>IELTS</span> Writing Practice</div>
+        <div class="nav-actions">
+            <button class="btn-secondary" id="btn-history">History</button>
+            <button class="btn-primary" id="btn-new-task">New Practice</button>
+        </div>
+    </header>
+
+    <!-- Configuration Modal -->
+    <div class="modal-overlay" id="config-modal">
+        <div class="modal">
+            <h2>Start IELTS Practice Session</h2>
+            
+            <div class="form-group">
+                <label for="task-type">Select Task</label>
+                <select id="task-type">
+                    <option value="task1">Task 1 (Academic / General Training - Min 150 words)</option>
+                    <option value="task2" selected>Task 2 (Essay - Min 250 words)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="prompt-select">Select Prompt Sample</label>
+                <select id="prompt-select"></select>
+            </div>
+
+            <div class="form-group">
+                <label for="custom-prompt">Or Enter Custom Prompt</label>
+                <textarea id="custom-prompt" placeholder="Paste your question prompt here..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="timer-option">Timer Setting</label>
+                <select id="timer-option">
+                    <option value="20">20 Minutes (Standard Task 1)</option>
+                    <option value="40" selected>40 Minutes (Standard Task 2)</option>
+                    <option value="60">60 Minutes</option>
+                    <option value="custom">Custom Time</option>
+                    <option value="untimed">Untimed Mode</option>
+                </select>
+            </div>
+
+            <div class="form-group hidden" id="custom-time-container">
+                <label for="custom-minutes">Custom Minutes</label>
+                <input type="number" id="custom-minutes" value="30" min="1" max="180">
+            </div>
+
+            <button class="btn-primary" id="btn-start">Start Writing</button>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal-overlay hidden" id="history-modal">
+        <div class="modal">
+            <h2>Saved Drafts & Essays</h2>
+            <div id="history-list"></div>
+            <button class="btn-secondary" id="btn-close-history">Close</button>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <main class="main-container">
+        <!-- Left Panel: Reference & Prompt -->
+        <section class="panel">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="prompt-tab">Prompt</button>
+                <button class="tab-btn" data-tab="structure-tab">Structure Guide</button>
+                <button class="tab-btn" data-tab="vocab-tab">Vocabulary</button>
+                <button class="tab-btn" data-tab="rubric-tab">Band Descriptors</button>
+            </div>
+
+            <div class="panel-body">
+                <div id="prompt-tab" class="tab-content active">
+                    <h3 id="display-task-title">Task Prompt</h3>
+                    <p id="display-prompt-text" style="margin-top: 1rem; line-height: 1.6;"></p>
+                </div>
+
+                <div id="structure-tab" class="tab-content">
+                    <h3>Recommended Structure</h3>
+                    <div id="structure-content" style="margin-top: 1rem; line-height: 1.6;"></div>
+                </div>
+
+                <div id="vocab-tab" class="tab-content">
+                    <h3>Linking Phrases & Vocabulary</h3>
+                    <div style="margin-top: 1rem; line-height: 1.8;">
+                        <p><strong>Opinions:</strong> In my opinion, From my perspective, It is argued that</p>
+                        <p><strong>Transitions:</strong> Furthermore, On the other hand, Consequently, Nevertheless</p>
+                        <p><strong>Conclusions:</strong> In conclusion, To sum up, On the whole</p>
+                    </div>
+                </div>
+
+                <div id="rubric-tab" class="tab-content">
+                    <h3>IELTS Marking Criteria</h3>
+                    <ul style="margin-top: 1rem; padding-left: 1.2rem; line-height: 1.8;">
+                        <li><strong>Task Achievement / Response:</strong> Answer all parts of the prompt fully.</li>
+                        <li><strong>Coherence & Cohesion:</strong> Organize paragraphs clearly with transitions.</li>
+                        <li><strong>Lexical Resource:</strong> Use varied, accurate academic vocabulary.</li>
+                        <li><strong>Grammatical Range:</strong> Use a mix of simple and complex sentence structures.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Writing Workspace -->
+        <section class="panel">
+            <div class="panel-header">
+                <div>Timer: <span id="timer-display" style="font-weight: bold; font-size: 1.1rem;">40:00</span></div>
+                <div>
+                    <button class="btn-secondary" id="btn-save">Save Draft</button>
+                    <button class="btn-primary" id="btn-export">Export PDF</button>
+                </div>
+            </div>
+
+            <div class="panel-body" style="display: flex; flex-direction: column;">
+                <textarea id="essay-input" placeholder="Start typing your response here..."></textarea>
+                
+                <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                        <span>Progress: <strong id="word-count">0</strong> / <span id="target-count">250</span> words</span>
+                        <span id="word-status" style="color: var(--accent-yellow);">Below Target</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progress-fill"></div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-value" id="stat-sentences">0</div>
+                            <div class="metric-label">Sentences</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="stat-avg-len">0</div>
+                            <div class="metric-label">Avg Words/Sentence</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="stat-paras">0</div>
+                            <div class="metric-label">Paragraphs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const prompts = {
+            task1: [
+                { id: "t1_1", name: "Bar Chart - World Energy Consumption", text: "The chart shows energy consumption by source in five countries in 2023. Summarise the information by selecting and reporting the main features, and make comparisons where relevant." },
+                { id: "t1_2", name: "GT Letter - Complaint to Landlord", text: "You are experiencing problems with the heating system in your rented apartment. Write a letter to your landlord explaining the situation, how it affects you, and what action you expect them to take." }
+            ],
+            task2: [
+                { id: "t2_1", name: "Opinion - Technology in Education", text: "Some people believe that computers and the internet will fully replace teachers in the classroom in the future. To what extent do you agree or disagree?" },
+                { id: "t2_2", name: "Discussion - Remote Work", text: "Some people feel that working from home benefits both employees and employers. Others argue it creates isolation and reduces workplace productivity. Discuss both sides and give your opinion." }
+            ]
+        };
+
+        let timerInterval = null;
+        let timeRemaining = 0;
+        let targetWords = 250;
+
+        // UI Selectors
+        const modal = document.getElementById('config-modal');
+        const historyModal = document.getElementById('history-modal');
+        const taskTypeSelect = document.getElementById('task-type');
+        const promptSelect = document.getElementById('prompt-select');
+        const timerSelect = document.getElementById('timer-option');
+        const essayInput = document.getElementById('essay-input');
+        const wordCountDisplay = document.getElementById('word-count');
+        const targetCountDisplay = document.getElementById('target-count');
+        const progressFill = document.getElementById('progress-fill');
+        const wordStatus = document.getElementById('word-status');
+        const timerDisplay = document.getElementById('timer-display');
+
+        // Initialize Prompts Dropdown
+        function updatePromptOptions() {
+            const task = taskTypeSelect.value;
+            promptSelect.innerHTML = '';
+            prompts[task].forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                promptSelect.appendChild(opt);
+            });
+            targetWords = task === 'task1' ? 150 : 250;
+            targetCountDisplay.textContent = targetWords;
+        }
+
+        taskTypeSelect.addEventListener('change', updatePromptOptions);
+        updatePromptOptions();
+
+        // Timer Toggle
+        timerSelect.addEventListener('change', (e) => {
+            const customContainer = document.getElementById('custom-time-container');
+            if (e.target.value === 'custom') {
+                customContainer.classList.remove('hidden');
+            } else {
+                customContainer.classList.add('hidden');
+            }
+        });
+
+        // Start Practice Session
+        document.getElementById('btn-start').addEventListener('click', () => {
+            const task = taskTypeSelect.value;
+            const selectedPromptId = promptSelect.value;
+            const customText = document.getElementById('custom-prompt').value.trim();
+
+            let promptText = customText;
+            if (!promptText) {
+                const selected = prompts[task].find(p => p.id === selectedPromptId);
+                promptText = selected ? selected.text : '';
+            }
+
+            document.getElementById('display-task-title').textContent = task === 'task1' ? 'Task 1 Prompt' : 'Task 2 Prompt';
+            document.getElementById('display-prompt-text').textContent = promptText;
+
+            // Structure setup
+            const structContainer = document.getElementById('structure-content');
+            structContainer.innerHTML = task === 'task1' ? 
+                `<p>1. <strong>Introduction:</strong> Paraphrase prompt.</p>
+                 <p>2. <strong>Overview:</strong> Key trends/features.</p>
+                 <p>3. <strong>Body Paragraph 1:</strong> Specific details/data.</p>
+                 <p>4. <strong>Body Paragraph 2:</strong> Remaining details/comparisons.</p>` :
+                `<p>1. <strong>Introduction:</strong> Paraphrase prompt & state thesis.</p>
+                 <p>2. <strong>Body Paragraph 1:</strong> Argument A with examples.</p>
+                 <p>3. <strong>Body Paragraph 2:</strong> Argument B with examples.</p>
+                 <p>4. <strong>Conclusion:</strong> Restate thesis & main points.</p>`;
+
+            // Timer Setup
+            const timerVal = timerSelect.value;
+            if (timerVal === 'untimed') {
+                timerDisplay.textContent = "Untimed";
+            } else {
+                let mins = parseInt(timerVal);
+                if (timerVal === 'custom') {
+                    mins = parseInt(document.getElementById('custom-minutes').value) || 30;
+                }
+                startTimer(mins * 60);
+            }
+
+            modal.classList.add('hidden');
+        });
+
+        // Timer function
+        function startTimer(seconds) {
+            clearInterval(timerInterval);
+            timeRemaining = seconds;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Time's up!");
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+            const s = (timeRemaining % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${m}:${s}`;
+        }
+
+        // Live Text Metrics
+        essayInput.addEventListener('input', () => {
+            const text = essayInput.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            const sentences = text ? text.split(/[.!?]+/).filter(Boolean).length : 0;
+            const paragraphs = text ? text.split(/
++/).filter(Boolean).length : 0;
+            const avgWords = sentences > 0 ? (words / sentences).toFixed(1) : 0;
+
+            wordCountDisplay.textContent = words;
+            document.getElementById('stat-sentences').textContent = sentences;
+            document.getElementById('stat-avg-len').textContent = avgWords;
+            document.getElementById('stat-paras').textContent = paragraphs;
+
+            // Update Progress Bar
+            const percentage = Math.min(100, Math.round((words / targetWords) * 100));
+            progressFill.style.width = `${percentage}%`;
+
+            if (words >= targetWords) {
+                progressFill.classList.add('complete');
+                wordStatus.textContent = "Target Reached";
+                wordStatus.style.color = "var(--accent-green)";
+            } else {
+                progressFill.classList.remove('complete');
+                wordStatus.textContent = "Below Target";
+                wordStatus.style.color = "var(--accent-yellow)";
+            }
+        });
+
+        // Tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Modals & Reset
+        document.getElementById('btn-new-task').addEventListener('click', () => modal.classList.remove('hidden'));
+        document.getElementById('btn-history').addEventListener('click', () => {
+            loadHistory();
+            historyModal.classList.remove('hidden');
+        });
+        document.getElementById('btn-close-history').addEventListener('click', () => historyModal.classList.add('hidden'));
+
+        // Save & Local Storage
+        document.getElementById('btn-save').addEventListener('click', () => {
+            const drafts = JSON.parse(localStorage.getItem('ielts_drafts') || '[]');
+            drafts.push({
+                date: new Date().toLocaleDateString(),
+                text: essayInput.value,
+                words: wordCountDisplay.textContent
+            });
+            localStorage.setItem('ielts_drafts', JSON.stringify(drafts));
+            alert('Draft saved successfully!');
+        });
+
+        function loadHistory() {
+            const list = document.getElementById('history-list');
+            const drafts = JSON.parse(localStorage.getItem('ielts_drafts') || '[]');
+            list.innerHTML = drafts.length ? '' : '<p>No saved drafts yet.</p>';
+            drafts.forEach((d, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `<div><strong>${d.date}</strong> - ${d.words} words</div><button class="btn-secondary" onclick="restoreDraft(${index})">Load</button>`;
+                list.appendChild(item);
+            });
+        }
+
+        window.restoreDraft = function(index) {
+            const drafts = JSON.parse(localStorage.getItem('ielts_drafts') || '[]');
+            essayInput.value = drafts[index].text;
+            essayInput.dispatchEvent(new Event('input'));
+            historyModal.classList.add('hidden');
+        };
+
+        // Export PDF
+        document.getElementById('btn-export').addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(16);
+            doc.text("IELTS Writing Essay Practice", 10, 10);
+            doc.setFontSize(11);
+            doc.text(`Word Count: ${wordCountDisplay.textContent}`, 10, 20);
+            const lines = doc.splitTextToSize(essayInput.value, 180);
+            doc.text(lines, 10, 30);
+            doc.save("IELTS_Writing_Practice.pdf");
+        });
+    </script>
+</body>
+</html>
